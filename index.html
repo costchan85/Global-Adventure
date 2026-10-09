@@ -156,9 +156,10 @@
         
         .card-tag { background: #34495e; color: #fff; border: 1px solid #f1c40f; border-radius: 4px; padding: 2px 5px; font-size: 10px; margin: 2px; display: inline-block; }
         .skill-tag { background: #27ae60; color: #fff; border-radius: 4px; padding: 2px 5px; font-size: 10px; margin: 2px; display: inline-block; }
+        .inventory-tag { background: #e67e22; color: #fff; border-radius: 4px; padding: 2px 5px; font-size: 10px; margin: 2px; display: inline-block; }
 
         .modal { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); justify-content: center; align-items: center; z-index: 100; }
-        .modal-content { background: #0f3460; padding: 20px; border-radius: 12px; border: 2px solid #f1c40f; width: 420px; max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: #0f3460; padding: 20px; border-radius: 12px; border: 2px solid #f1c40f; width: 460px; max-height: 90vh; overflow-y: auto; }
         select, input { width: 100%; padding: 8px; margin: 6px 0; background: #1a1a2e; color: #fff; border: 1px solid #3498db; border-radius: 4px; }
         .trade-flex { display: flex; gap: 10px; justify-content: space-between; }
         .trade-box { flex: 1; background: #16213e; padding: 8px; border-radius: 6px; font-size: 12px; }
@@ -169,6 +170,9 @@
         .mode-tab { display: flex; gap: 10px; margin-bottom: 15px; }
         .tab-btn { flex: 1; padding: 8px; background: #16213e; color: #ccc; border: 1px solid #34495e; border-radius: 6px; cursor: pointer; text-align: center; font-weight: bold; }
         .tab-btn.active { background: #e94560; color: #fff; border-color: #f1c40f; }
+
+        .score-card { background: #16213e; border: 1px solid #3498db; border-radius: 8px; padding: 12px; margin-bottom: 10px; text-align: left; font-size: 12px; line-height: 1.6; }
+        .score-title { font-size: 14px; font-weight: bold; color: #f1c40f; border-bottom: 1px dashed #3498db; padding-bottom: 4px; margin-bottom: 6px; }
     </style>
 </head>
 <body>
@@ -218,21 +222,31 @@
             <h2 style="color:#f1c40f; text-align:center; margin-bottom:15px;">🎮 遊戲大廳</h2>
             
             <div class="mode-tab">
-                <div class="tab-btn active" id="tabSingle" onclick="switchLobbyTab('single')">🤖 單機人機對戰</div>
+                <div class="tab-btn active" id="tabSingle" onclick="switchLobbyTab('single')">🤖 單機本土對戰</div>
                 <div class="tab-btn" id="tabOnline" onclick="switchLobbyTab('online')">🌐 線上多人對戰</div>
             </div>
 
-            <label style="font-size:13px; font-weight:bold;">輸入您的暱稱：</label>
-            <input type="text" id="playerNameInput" placeholder="請輸入玩家名稱" value="玩家 A">
+            <div id="singleModeSection">
+                <div style="background:#16213e; padding:10px; border-radius:6px; margin-bottom:10px;">
+                    <label style="font-size:12px; color:#f1c40f;">選擇真人玩家人數 (1 ~ 4 人)：</label>
+                    <select id="singleHumanCountSelect" onchange="renderHumanNameInputs()">
+                        <option value="1" selected>1 位真人玩家</option>
+                        <option value="2">2 位真人玩家 (同機共遊)</option>
+                        <option value="3">3 位真人玩家 (同機共遊)</option>
+                        <option value="4">4 位真人玩家 (同機共遊)</option>
+                    </select>
 
-            <!-- 🤖 單機模式設定區塊 -->
-            <div id="singleModeSection" style="margin-top:10px;">
-                <label style="font-size:12px;">選擇電腦 AI 數量：</label>
-                <select id="aiCountSelect">
-                    <option value="1">1 位電腦 AI (1v1)</option>
-                    <option value="2" selected>2 位電腦 AI (1v2)</option>
-                    <option value="3">3 位電腦 AI (1v3)</option>
-                </select>
+                    <div id="humanNamesContainer"></div>
+
+                    <label style="font-size:12px; color:#3498db; margin-top:8px; display:block;">選擇電腦 AI 數量 (0 ~ 3 位)：</label>
+                    <select id="singleAiCountSelect">
+                        <option value="0">0 位電腦 AI</option>
+                        <option value="1">1 位電腦 AI</option>
+                        <option value="2" selected>2 位電腦 AI</option>
+                        <option value="3">3 位電腦 AI</option>
+                    </select>
+                    <p style="font-size:11px; color:#f1c40f; margin-top:6px;">⚠️ 注意：總人數（真人 + 電腦）必須為 2 至 4 人！</p>
+                </div>
 
                 <label style="font-size:12px;">選擇解鎖國家勝利目標：</label>
                 <select id="singleTargetNationSelect">
@@ -240,13 +254,23 @@
                     <option value="4" selected>集齊 4 個國家解鎖 (標準模式)</option>
                 </select>
 
-                <button class="btn" id="startSingleGameBtn" style="width:100%; margin-top:12px; background:#2ecc71;">🤖 開始單機人機對戰</button>
+                <button class="btn" id="startSingleGameBtn" style="width:100%; margin-top:12px; background:#2ecc71;">🤖 開始單機本土對戰</button>
             </div>
 
-            <!-- 🌐 線上連線模式設定區塊 -->
-            <div id="onlineModeSection" style="display:none; margin-top:10px;">
-                <div style="border-top:1px dashed #34495e; padding-top:10px;">
+            <div id="onlineModeSection" style="display:none;">
+                <label style="font-size:13px; font-weight:bold;">輸入您的暱稱：</label>
+                <input type="text" id="onlinePlayerNameInput" placeholder="請輸入玩家名稱" value="玩家 A">
+
+                <div style="border-top:1px dashed #34495e; padding-top:10px; margin-top:10px;">
                     <h3 style="color:#2ecc71; font-size:14px; margin-bottom:8px;">【建立新對戰房間】</h3>
+                    
+                    <label style="font-size:12px; color:#3498db;">加入電腦 AI 補位人數：</label>
+                    <select id="onlineAiCountSelect">
+                        <option value="0" selected>0 位電腦 AI (純真人連線)</option>
+                        <option value="1">1 位電腦 AI 補位</option>
+                        <option value="2">2 位電腦 AI 補位</option>
+                    </select>
+
                     <label style="font-size:12px;">選擇解鎖國家勝利目標：</label>
                     <select id="targetNationSelect">
                         <option value="3">集齊 3 個國家解鎖 (快節奏)</option>
@@ -264,7 +288,7 @@
         </div>
     </div>
 
-    <!-- ⏳ 等待其他玩家 Modal -->
+    <!-- ⏳ 等待 Modal -->
     <div class="modal" id="waitingModal" style="display:none;">
         <div class="modal-content" style="text-align: center;">
             <h2 style="color:#f1c40f; margin-bottom:10px;">🏠 房間碼：<span id="displayRoomCode" style="color:#2ecc71;">----</span></h2>
@@ -322,12 +346,22 @@
                 <div id="tradeTakeDetail" style="color:#e74c3c; margin-top:6px;"></div>
             </div>
 
-            <p style="font-size:12px; color:#ccc;">請問您是否同意接受此項交易？</p>
+            <p style="font-size:12px; color:#ccc;">請問被交易玩家是否同意接受此項交易？</p>
 
             <div class="btn-group" style="margin-top:15px;">
                 <button class="btn" id="acceptTradeBtn" style="background:#2ecc71;">✅ 同意接受交易</button>
                 <button class="btn btn-sec" id="rejectTradeBtn" style="background:#e74c3c;">❌ 拒絕交易</button>
             </div>
+        </div>
+    </div>
+
+    <!-- 🏆 結算 Modal -->
+    <div class="modal" id="gameOverModal" style="display:none;">
+        <div class="modal-content" style="text-align: center;">
+            <h2 style="color:#f1c40f; margin-bottom:10px;">🎉 遊戲結束！最終詳細結算</h2>
+            <div id="winnerReason" style="font-size:14px; font-weight:bold; color:#2ecc71; margin-bottom:12px;"></div>
+            <div id="winnerDetails"></div>
+            <button class="btn" style="margin-top:15px; width:100%;" onclick="location.reload()">🔄 返回大廳重新開始</button>
         </div>
     </div>
 
@@ -352,20 +386,23 @@
 
         let isSinglePlayerMode = false;
         let isAIBusy = false;
+        let hasRolledThisTurn = false;
         let currentRoomCode = null;
         let myPlayerId = 0;
         let myPlayerName = "玩家";
         let isHost = false;
         let gameState = null;
 
+        const ancientCountries = ["中國", "印度", "埃及", "希臘", "墨西哥"];
+
         const countryCardDatabase = {
             "中國": { code: "cn", skillName: "萬里長城", cards: [{type:"首都", name:"北京"}, {type:"風俗", name:"農曆新年習俗"}, {type:"文化", name:"京劇與武術"}], desc: "免疫所有負面事件（如旅遊黑店扣款、海關扣留等）。", type: "passive" },
-            "日本": { code: "jp", skillName: "新幹線", cards: [{type:"首都", name:"東京"}, {type:"風俗", name:"鞠躬與禮儀"}, {type:"文化", name:"動漫與茶道"}], desc: "停留在機場格時，可免費且無視解鎖限制飛往任一機場。", type: "passive" },
+            "日本": { code: "jp", skillName: "新幹線", cards: [{type:"首都", name:"東京"}, {type:"風俗", name:"鞠躬與禮儀"}, {type:"文化", name:"動漫與茶道"}], desc: "停留在機場格時，可免費且自由選擇飛往任一機場。", type: "passive" },
             "澳洲": { code: "au", skillName: "袋鼠跳躍", cards: [{type:"首都", name:"堪培拉"}, {type:"風俗", name:"衝浪與沙灘"}, {type:"文化", name:"原住民岩畫與藝術"}], desc: "前進時可選擇跳過前方一個格子（每回合限使用 1 次）。", type: "active" },
             "印度": { code: "in", skillName: "瑜伽冥想", cards: [{type:"首都", name:"新德里"}, {type:"風俗", name:"灑紅節 (Holi)"}, {type:"文化", name:"瑜伽與寶萊塢"}], desc: "抽「機會/命運」卡時可一次抽兩張並選擇較有利的一張執行。", type: "passive" },
             "沙地阿拉伯": { code: "sa", skillName: "石油大亨", cards: [{type:"首都", name:"利雅得"}, {type:"風俗", name:"咖啡與椰棗迎賓"}, {type:"文化", name:"伊斯蘭建築藝術"}], desc: "解鎖後，其他玩家停留在沙地阿拉伯格時需支付加倍過路費（200 幣）。", type: "passive" },
             "埃及": { code: "eg", skillName: "法老的詛咒", cards: [{type:"首都", name:"開羅"}, {type:"風俗", name:"尼羅河帆船體驗"}, {type:"文化", name:"法老與金字塔"}], desc: "遭受負面效果時，可自動轉嫁給指定其他玩家承擔！", type: "passive" },
-            "希臘": { code: "gr", skillName: "古文明輝煌", cards: [{type:"首都", name:"雅典"}, {type:"風俗", name:"地中海慢活飲食"}, {type:"文化", name:"古希臘哲學與神話"}], desc: "終局計分時，手上的每個古文明國（中國/印度/埃及/希臘/墨西哥）額外 +100 分。", type: "passive" },
+            "希臘": { code: "gr", skillName: "古文明輝煌", cards: [{type:"首都", name:"雅典"}, {type:"風俗", name:"地中海慢活飲食"}, {type:"文化", name:"古希臘哲學與神話"}], desc: "終局計分時，手上的每個完整解鎖古文明國額外 +100 分。", type: "passive" },
             "意大利": { code: "it", skillName: "文藝復興", cards: [{type:"首都", name:"羅馬"}, {type:"風俗", name:"手勢對話與餐桌社交"}, {type:"文化", name:"文藝復興藝術"}], desc: "解鎖技能時，可即時免費挑選一張市場上未被持有的元素卡。", type: "passive" },
             "瑞士": { code: "ch", skillName: "瑞士銀行", cards: [{type:"首都", name:"伯恩"}, {type:"風俗", name:"阿爾卑斯長角號演奏"}, {type:"文化", name:"精密鐘錶工藝與滑雪"}], desc: "每回合結束時，固定獲得額外 +100 哩程幣資助。", type: "passive" },
             "英國": { code: "gb", skillName: "大笨鐘", cards: [{type:"首都", name:"倫敦"}, {type:"風俗", name:"下午茶時光"}, {type:"文化", name:"莎士比亞文學"}], desc: "每回合移動前可自由選擇發動，調整骰子總點數正負 1 點。", type: "active" },
@@ -373,7 +410,7 @@
             "法國": { code: "fr", skillName: "時尚之都", cards: [{type:"首都", name:"巴黎"}, {type:"風俗", name:"法式親吻禮"}, {type:"文化", name:"時裝與紅酒"}], desc: "每次與其他玩家交易元素卡時，獲得銀行額外 50 哩程幣補貼。", type: "passive" },
             "俄羅斯": { code: "ru", skillName: "西伯利亞鐵路", cards: [{type:"首都", name:"莫斯科"}, {type:"風俗", name:"蒸桑拿與茶具"}, {type:"文化", name:"芭蕾舞與套娃"}], desc: "停留在他人國家格時免付過路費，且停留在海關扣留區與安檢區域時免受凍結與扣留影響。", type: "passive" },
             "美國": { code: "us", skillName: "矽谷投資", cards: [{type:"首都", name:"華盛頓特區"}, {type:"風俗", name:"感恩節烤火雞聚餐"}, {type:"文化", name:"好萊塢電影"}], desc: "每經過起點可額外獲得雙倍哩程幣（共 400 幣）。", type: "passive" },
-            "墨西哥": { code: "mx", skillName: "馬雅預言", cards: [{type:"首都", name:"墨西哥城"}, {type:"風俗", name:"亡靈節萬壽菊狂歡"}, {type:"文化", name:"阿茲特克與馬雅文明"}], desc: "終局計分時，手上的每個古文明國（中國/印度/埃及/希臘/墨西哥）額外 +100 分（可與希臘疊加）。", type: "passive" },
+            "墨西哥": { code: "mx", skillName: "馬雅預言", cards: [{type:"首都", name:"墨西哥城"}, {type:"風俗", name:"亡靈節萬壽菊狂歡"}, {type:"文化", name:"阿茲特克與馬雅文明"}], desc: "終局計分時，手上的每個完整解鎖古文明國額外 +100 分（可與希臘疊加）。", type: "passive" },
             "巴西": { code: "br", skillName: "森巴狂歡", cards: [{type:"首都", name:"巴西利亞"}, {type:"風俗", name:"森巴舞狂歡"}, {type:"文化", name:"足球熱情"}], desc: "擲出兩骰點數相同（對子）時，可自由選擇僅前進單骰點數或兩骰總和點數。", type: "passive" }
         };
 
@@ -423,12 +460,14 @@
             { id:39, name:"耶穌雕像", type:"attraction", r:2, c:1 }
         ];
 
+        const airportPosList = [5, 15, 25, 35];
+
         const baseChanceCards = [
             { id: 1, title: "航班順風", desc: "提早抵達目的地！時間加速，往前移動 3 格。", type: "simple", keepable: false },
             { id: 2, title: "簽證延誤", desc: "移動至羽田機場格，且下一回合暫停移動。", type: "penalty", keepable: false },
             { id: 3, title: "旅遊頭等艙升等", desc: "獲得 150 哩程幣！", type: "simple", keepable: false },
             { id: 4, title: "迷路探險", desc: "在古城巷弄裡迷路！請自由選擇前進或後退 2 格。", type: "choice", keepable: false },
-            { id: 5, title: "罷工影響", desc: "所有玩家在下一輪移動時，強制只能使用 1 顆骰子 (1D6)。", type: "simple", keepable: false },
+            { id: 5, title: "罷工影響", desc: "所有玩家在接下來 1 輪移動時，強制只能使用 1 顆骰子 (1D6)。", type: "simple", keepable: false },
             { id: 6, title: "世界文化遺產資助", desc: "每擁有一個已解鎖國家，即可領取 100 哩程幣。", type: "simple", keepable: false },
             { id: 7, title: "文化交流大使", desc: "向其他每位玩家收取 30 哩程幣入場費。", type: "simple", keepable: false },
             { id: 8, title: "風俗文化衝突", desc: "支付 80 哩程幣作為文化賠償金。", type: "penalty", keepable: false },
@@ -452,49 +491,73 @@
             return arr;
         }
 
+        window.renderHumanNameInputs = function() {
+            const container = document.getElementById("humanNamesContainer");
+            const humanCount = parseInt(document.getElementById("singleHumanCountSelect").value);
+            const defaultNames = ["玩家 A", "玩家 B", "玩家 C", "玩家 D"];
+
+            let html = "";
+            for (let i = 0; i < humanCount; i++) {
+                html += `
+                    <div style="margin-top:6px;">
+                        <label style="font-size:12px; color:#fff;">真人玩家 ${i + 1} 暱稱：</label>
+                        <input type="text" class="human-name-input" placeholder="請輸入玩家 ${i + 1} 名稱" value="${defaultNames[i]}">
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        };
+
         function startSinglePlayerGame() {
             isSinglePlayerMode = true;
             isAIBusy = false;
-            myPlayerName = document.getElementById("playerNameInput").value.trim() || "玩家";
-            const aiCount = parseInt(document.getElementById("aiCountSelect").value);
+            hasRolledThisTurn = false;
+            
+            const humanCount = parseInt(document.getElementById("singleHumanCountSelect").value);
+            const aiCount = parseInt(document.getElementById("singleAiCountSelect").value);
+            const totalCount = humanCount + aiCount;
+
+            if (totalCount < 2 || totalCount > 4) {
+                alert("⚠️ 總人數必須為 2 至 4 人！");
+                return;
+            }
+
+            const nameInputs = document.querySelectorAll(".human-name-input");
             const targetNations = parseInt(document.getElementById("singleTargetNationSelect").value);
 
             myPlayerId = 0;
+            const players = [];
 
-            const players = [
-                {
-                    id: 0,
-                    name: `${myPlayerName} (您)`,
-                    isAI: false,
-                    color: playerColors[0],
-                    coins: 1000,
-                    pos: 0,
-                    cards: [],
-                    bond: 0,
-                    isFrozen: false,
-                    pendingStepAdjust: 0,
-                    inventory: [],
-                    hasUsedSkillThisTurn: false,
-                    hasTriggeredItaly: false
-                }
-            ];
-
-            const aiNames = ["🤖 阿爾法 (AI)", "🤖 貝塔 (AI)", "🤖 伽瑪 (AI)"];
-            for (let i = 1; i <= aiCount; i++) {
+            for (let i = 0; i < humanCount; i++) {
+                let nameVal = nameInputs[i] ? nameInputs[i].value.trim() : "";
                 players.push({
                     id: i,
-                    name: aiNames[i - 1],
-                    isAI: true,
+                    name: nameVal || `玩家 ${String.fromCharCode(65 + i)}`,
+                    isAI: false,
                     color: playerColors[i],
                     coins: 1000,
                     pos: 0,
                     cards: [],
                     bond: 0,
                     isFrozen: false,
-                    pendingStepAdjust: 0,
-                    inventory: [],
-                    hasUsedSkillThisTurn: false,
-                    hasTriggeredItaly: false
+                    inventory: []
+                });
+            }
+
+            const aiNames = ["🤖 阿爾法 (AI)", "🤖 貝塔 (AI)", "🤖 伽瑪 (AI)"];
+            for (let i = 0; i < aiCount; i++) {
+                let pId = humanCount + i;
+                players.push({
+                    id: pId,
+                    name: aiNames[i],
+                    isAI: true,
+                    color: playerColors[pId],
+                    coins: 1000,
+                    pos: 0,
+                    cards: [],
+                    bond: 0,
+                    isFrozen: false,
+                    inventory: []
                 });
             }
 
@@ -503,7 +566,7 @@
                 turn: 0,
                 targetUnlockCount: targetNations,
                 strikeTurnCount: 0,
-                logs: [`🤖 單機對戰模式開始！與 ${aiCount} 位電腦 AI 對決！`],
+                logs: [`🤖 單機對戰開始！共 ${humanCount} 位真人 + ${aiCount} 位電腦對決！`],
                 currentDeck: shuffle(baseChanceCards),
                 discardPile: [],
                 pendingTradeOffer: null,
@@ -511,24 +574,25 @@
             };
 
             document.getElementById("lobbyModal").style.display = "none";
-            document.getElementById("modeHeaderTag").innerText = "(單機人機版)";
+            document.getElementById("modeHeaderTag").innerText = "(單機本土版)";
             updateBoardAndUI();
         }
 
+        // 🛠️ AI 行動觸發機制
         function checkAndTriggerAITurn() {
             if (!gameState || gameState.status !== "playing" || isAIBusy) return;
 
             const activePlayer = gameState.players[gameState.turn];
             
-            if (activePlayer && activePlayer.isAI && activePlayer.id !== myPlayerId) {
-                isAIBusy = true;
+            if (activePlayer && activePlayer.isAI) {
+                if (!isSinglePlayerMode && !isHost) return; 
 
-                document.getElementById("rollBtn").disabled = true;
-                document.getElementById("tradeBtn").disabled = true;
+                isAIBusy = true;
+                disableAllControls();
 
                 setTimeout(() => {
                     executeAITurn(activePlayer);
-                }, 1200);
+                }, 800);
             }
         }
 
@@ -536,7 +600,6 @@
             if (aiPlayer.isFrozen) {
                 gameState.logs.push(`❄️ ${aiPlayer.name} 正處於扣留狀態，暫停 1 回合！`);
                 aiPlayer.isFrozen = false;
-                isAIBusy = false;
                 await endTurnOnline();
                 return;
             }
@@ -547,11 +610,18 @@
 
             if (gameState.strikeTurnCount > 0) {
                 step = d1;
-                gameState.strikeTurnCount--;
+                document.getElementById("diceResult").innerText = `🎲 罷工影響！擲出: [${d1}] = ${step} 點`;
+                gameState.logs.push(`⚠️ 受罷工影響，${aiPlayer.name} 本回合僅能使用 1 顆骰子 (1D6)！`);
+            } else {
+                document.getElementById("diceResult").innerText = `🎲 擲出: [${d1}] + [${d2}] = ${step} 點`;
             }
 
+            let oldPos = aiPlayer.pos;
             aiPlayer.pos = (aiPlayer.pos + step) % 40;
-            gameState.logs.push(`🎲 ${aiPlayer.name} 擲出 ${step} 點，移動至格號 #${aiPlayer.pos}`);
+
+            if (aiPlayer.pos < oldPos) grantStartReward(aiPlayer);
+
+            gameState.logs.push(`➡️ ${aiPlayer.name} 擲出 ${step} 點，移動至格號 #${aiPlayer.pos}`);
 
             const grid = boardData[aiPlayer.pos];
 
@@ -562,6 +632,10 @@
 
                 if (availableCards.length > 0 && aiPlayer.coins >= 150) {
                     let cost = checkHasFullSet(aiPlayer, "德國") ? 70 : 100;
+                    if ((aiPlayer.inventory||[]).includes("語言天賦爆發")) {
+                        cost = 50;
+                        aiPlayer.inventory = aiPlayer.inventory.filter(i => i !== "語言天賦爆發");
+                    }
                     aiPlayer.coins -= cost;
                     aiPlayer.cards.push({ country: cName, type: availableCards[0].type, name: availableCards[0].name });
                     gameState.logs.push(`🛒 ${aiPlayer.name} 自動購買了 [${cName}] 的【${availableCards[0].type}：${availableCards[0].name}】！`);
@@ -571,26 +645,51 @@
                 if (card) {
                     if (card.id === 1) aiPlayer.pos = (aiPlayer.pos + 3) % 40;
                     else if (card.id === 3) aiPlayer.coins += 150;
+                    else if (card.id === 5) {
+                        gameState.strikeTurnCount = gameState.players.length + 1;
+                        gameState.logs.push(`⚠️ ${aiPlayer.name} 抽到了【罷工影響】，全場每位玩家 1 輪僅能使用 1 顆骰子！`);
+                    }
+                    else if (card.id === 9) { aiPlayer.inventory = aiPlayer.inventory || []; aiPlayer.inventory.push("語言天賦爆發"); }
                     else if (card.id === 10) aiPlayer.coins += 200;
                     gameState.logs.push(`🎴 ${aiPlayer.name} 抽到了【${card.title}】`);
                     if (!card.keepable) gameState.discardPile.push(card);
                 }
+            } else if (grid.name === "外匯交易所" && aiPlayer.coins >= 200) {
+                aiPlayer.coins -= 200;
+                aiPlayer.bond = (aiPlayer.bond || 0) + 15;
+                gameState.logs.push(`💱 ${aiPlayer.name} 購買外匯債券 (+15 積分)！`);
+            } else if (grid.name === "免稅購物中心" && aiPlayer.coins >= 80) {
+                let allUnownedCards = getAllUnownedCards();
+                if (allUnownedCards.length > 0) {
+                    aiPlayer.coins -= 80;
+                    let randomCard = allUnownedCards[Math.floor(Math.random() * allUnownedCards.length)];
+                    aiPlayer.cards.push(randomCard);
+                    gameState.logs.push(`🎁 ${aiPlayer.name} 購買文化盲盒，抽中了 [${randomCard.country}] 的【${randomCard.type}：${randomCard.name}】！`);
+                }
             }
 
-            isAIBusy = false;
             await endTurnOnline();
         }
 
         async function createRoom() {
             isSinglePlayerMode = false;
-            myPlayerName = document.getElementById("playerNameInput").value.trim() || "房長";
+            myPlayerName = document.getElementById("onlinePlayerNameInput").value.trim() || "房長";
+            const aiCount = parseInt(document.getElementById("onlineAiCountSelect").value);
             const targetNations = parseInt(document.getElementById("targetNationSelect").value);
-            
+
             currentRoomCode = Math.floor(1000 + Math.random() * 9000).toString();
             isHost = true;
             myPlayerId = 0;
 
             const initialDeck = shuffle(baseChanceCards);
+            const initialPlayers = [
+                { id: 0, name: `${myPlayerName} (房長)`, isAI: false, color: playerColors[0], coins: 1000, pos: 0, cards: [], bond: 0, isFrozen: false, inventory: [] }
+            ];
+
+            const aiNames = ["🤖 阿爾法 (AI)", "🤖 貝塔 (AI)"];
+            for (let i = 0; i < aiCount; i++) {
+                initialPlayers.push({ id: 1 + i, name: aiNames[i], isAI: true, color: playerColors[1 + i], coins: 1000, pos: 0, cards: [], bond: 0, isFrozen: false, inventory: [] });
+            }
 
             const initialRoomData = {
                 roomCode: currentRoomCode,
@@ -602,23 +701,7 @@
                 currentDeck: initialDeck,
                 discardPile: [],
                 pendingTradeOffer: null,
-                players: [
-                    {
-                        id: 0,
-                        name: myPlayerName,
-                        isAI: false,
-                        color: playerColors[0],
-                        coins: 1000,
-                        pos: 0,
-                        cards: [],
-                        bond: 0,
-                        isFrozen: false,
-                        pendingStepAdjust: 0,
-                        inventory: [],
-                        hasUsedSkillThisTurn: false,
-                        hasTriggeredItaly: false
-                    }
-                ]
+                players: initialPlayers
             };
 
             await set(ref(db, `rooms/${currentRoomCode}`), initialRoomData);
@@ -633,7 +716,7 @@
 
         async function joinRoom() {
             isSinglePlayerMode = false;
-            myPlayerName = document.getElementById("playerNameInput").value.trim() || "玩家";
+            myPlayerName = document.getElementById("onlinePlayerNameInput").value.trim() || "玩家";
             const inputCode = document.getElementById("roomCodeInput").value.trim();
 
             if (!inputCode) { alert("請輸入 4 位數房間碼！"); return; }
@@ -641,40 +724,23 @@
             const roomRef = ref(db, `rooms/${inputCode}`);
             const snapshot = await get(roomRef);
 
-            if (!snapshot.exists()) { alert("❌ 找不到此房間碼，請確認後重試！"); return; }
+            if (!snapshot.exists()) { alert("❌ 找不到此房間碼！"); return; }
 
             const roomData = snapshot.val();
-
-            if (roomData.status !== "waiting") { alert("⚠️ 該房間遊戲已經開始，無法加入！"); return; }
-            if (roomData.players.length >= 4) { alert("⚠️ 該房間人數已滿 (最多 4 人)！"); return; }
+            if (roomData.status !== "waiting" || roomData.players.length >= 4) {
+                alert("⚠️ 房間無法加入 (遊戲已開始或人數已滿)！");
+                return;
+            }
 
             myPlayerId = roomData.players.length;
             isHost = false;
             currentRoomCode = inputCode;
 
-            const newPlayer = {
-                id: myPlayerId,
-                name: myPlayerName,
-                isAI: false,
-                color: playerColors[myPlayerId],
-                coins: 1000,
-                pos: 0,
-                cards: [],
-                bond: 0,
-                isFrozen: false,
-                pendingStepAdjust: 0,
-                inventory: [],
-                hasUsedSkillThisTurn: false,
-                hasTriggeredItaly: false
-            };
-
+            const newPlayer = { id: myPlayerId, name: myPlayerName, isAI: false, color: playerColors[myPlayerId], coins: 1000, pos: 0, cards: [], bond: 0, isFrozen: false, inventory: [] };
             roomData.players.push(newPlayer);
             roomData.logs.push(`👋 ${myPlayerName} 加入了房間！`);
 
-            await update(ref(db, `rooms/${currentRoomCode}`), {
-                players: roomData.players,
-                logs: roomData.logs
-            });
+            await update(ref(db, `rooms/${currentRoomCode}`), { players: roomData.players, logs: roomData.logs });
 
             document.getElementById("lobbyModal").style.display = "none";
             document.getElementById("waitingModal").style.display = "flex";
@@ -692,16 +758,14 @@
             let roomData = snapshot.val();
 
             if (roomData.players.length < 2) {
-                if (!confirm("目前只有 1 位玩家，確定要自己開始遊戲？")) return;
+                alert("⚠️ 目前遊戲人數少於 2 人，無法開始！");
+                return;
             }
 
             roomData.status = "playing";
-            roomData.logs.push(`🚀 房長啟動了遊戲！共有 ${roomData.players.length} 位玩家對戰！`);
+            roomData.logs.push(`🚀 房長啟動了遊戲！共有 ${roomData.players.length} 位玩家進行對戰！`);
 
-            await update(roomRef, {
-                status: "playing",
-                logs: roomData.logs
-            });
+            await update(roomRef, { status: "playing", logs: roomData.logs });
         }
 
         function listenToRoomUpdates(code) {
@@ -733,7 +797,7 @@
 
             let html = "<strong>目前已加入的玩家：</strong><br>";
             gameState.players.forEach((p, idx) => {
-                html += `• <span style="color:${p.color}; font-weight:bold;">${p.name}</span> ${idx === 0 ? '(房長)' : ''} ${p.id === myPlayerId ? '👈 您' : ''}<br>`;
+                html += `• <span style="color:${p.color}; font-weight:bold;">${p.name}</span> ${p.isAI ? '🤖' : ''} ${idx === 0 ? '(房長)' : ''} ${p.id === myPlayerId ? '👈 您' : ''}<br>`;
             });
             listEl.innerHTML = html;
         }
@@ -747,8 +811,20 @@
             updateSkillsSidebarUI();
             updateTurnControlButtons();
 
-            if (isSinglePlayerMode) {
+            checkGameOverConditions();
+
+            if (gameState.status === "playing") {
                 checkAndTriggerAITurn();
+            }
+        }
+
+        function disableAllControls() {
+            document.getElementById("rollBtn").disabled = true;
+            document.getElementById("tradeBtn").disabled = true;
+            const actionBtns = document.getElementById("actionBtns");
+            if (actionBtns) {
+                const btns = actionBtns.querySelectorAll("button");
+                btns.forEach(b => b.disabled = true);
             }
         }
 
@@ -808,7 +884,7 @@
 
             gameState.players.forEach((p, i) => {
                 let active = i === gameState.turn ? "active" : "";
-                let isMe = p.id === myPlayerId ? "is-me" : "";
+                let isMe = (isSinglePlayerMode && !p.isAI) || (p.id === myPlayerId) ? "is-me" : "";
 
                 let cardsFormatted = p.cards && p.cards.length > 0 
                     ? p.cards.map(c => `<span class="card-tag">[${c.country}] ${c.type}:${c.name}</span>`).join(" ") 
@@ -819,13 +895,18 @@
                     ? unlocked.map(a => `<span class="skill-tag"><img class="sidebar-flag-icon" src="https://flagcdn.com/w160/${countryCardDatabase[a].code}.png">${a} (${countryCardDatabase[a].skillName})</span>`).join(" ") 
                     : "無";
 
+                let inventoryFormatted = (p.inventory && p.inventory.length > 0)
+                    ? p.inventory.map(item => `<span class="inventory-tag">🎒 ${item}</span>`).join(" ")
+                    : "無";
+
                 container.innerHTML += `
                     <div class="player-card ${active} ${isMe}">
-                        <strong style="color:${p.color}">${p.name}</strong> ${i === gameState.turn ? '(當前回合)' : ''} ${p.id === myPlayerId ? '⭐(您)' : ''}<br>
+                        <strong style="color:${p.color}">${p.name}</strong> ${i === gameState.turn ? '(當前回合)' : ''}<br>
                         💰 哩程幣: ${p.coins} | 📜 外匯債券: +${p.bond || 0}分<br>
+                        🎒 道具與保留卡: ${inventoryFormatted}<br>
                         🎴 持有卡片 (${(p.cards||[]).length}張 = +${(p.cards||[]).length * 50}分):<br>${cardsFormatted}<br>
-                        ⚡ 解鎖技能 (${unlocked.length}/${gameState.targetUnlockCount} 個勝利條件): ${abilitiesFormatted}<br>
-                        📍 位置: #${p.pos} 格
+                        ⚡ 解鎖技能 (${unlocked.length}/${gameState.targetUnlockCount} 個目標): ${abilitiesFormatted}<br>
+                        📍 位置: #${p.pos} 格 (${boardData[p.pos].name})
                     </div>
                 `;
             });
@@ -847,7 +928,7 @@
                 
                 let actionBtn = "";
                 if (cData.type === "active" && isFullSet) {
-                    let isDisabled = (currentPlayer.id !== myPlayerId || currentPlayer.hasUsedSkillThisTurn) ? "disabled" : "";
+                    let isDisabled = (currentPlayer.isAI || (gameState.turn !== myPlayerId && !isSinglePlayerMode)) ? "disabled" : "";
                     actionBtn = `<button class="btn-skill" ${isDisabled} onclick="triggerOnlineSkill('${cName}')">發動 ${cData.skillName}</button>`;
                 } else if (isFullSet) {
                     actionBtn = `<div style="font-size:10px; color:#2ecc71; text-align:center;">⚡ 被動技能（持續生效）</div>`;
@@ -867,7 +948,6 @@
             });
         }
 
-        // 🛠️ 修正：交易按鈕鎖定邏輯修復
         function updateTurnControlButtons() {
             const rollBtn = document.getElementById("rollBtn");
             const tradeBtn = document.getElementById("tradeBtn");
@@ -875,17 +955,26 @@
             const actionTitle = document.getElementById("actionTitle");
             const actionBtns = document.getElementById("actionBtns");
 
-            if (gameState.turn === myPlayerId) {
-                rollBtn.disabled = false;
-                tradeBtn.disabled = false; // 解除交易按鈕鎖定
-                actionTitle.innerText = "🌟 輪到您的回合！";
-                if (!actionBtns.hasChildNodes()) {
+            const activePlayer = gameState.players[gameState.turn];
+            const isMyTurn = isSinglePlayerMode ? !activePlayer.isAI : (gameState.turn === myPlayerId);
+
+            if (isMyTurn) {
+                rollBtn.disabled = hasRolledThisTurn;
+                tradeBtn.disabled = false;
+                
+                if (gameState.strikeTurnCount > 0) {
+                    rollBtn.innerText = "🎲 擲單骰移動 (罷工影響)";
+                } else {
+                    rollBtn.innerText = "🎲 擲雙骰移動";
+                }
+
+                actionTitle.innerText = `🌟 輪到【${activePlayer.name}】的回合！`;
+                if (!actionBtns.hasChildNodes() && !hasRolledThisTurn) {
                     actionDesc.innerText = "請點擊「擲骰子移動」或發起「自由交易」。";
                 }
             } else {
                 rollBtn.disabled = true;
                 tradeBtn.disabled = true;
-                const activePlayer = gameState.players[gameState.turn];
                 actionTitle.innerText = `等待 ${activePlayer ? activePlayer.name : ''} 行動中...`;
                 actionDesc.innerText = "請等待對方思考與行動。";
                 actionBtns.innerHTML = "";
@@ -902,10 +991,23 @@
             return Object.keys(countryCardDatabase).filter(cName => checkHasFullSet(player, cName));
         }
 
-        window.handleRollOnline = async function() {
-            if (gameState.turn !== myPlayerId) return;
+        function grantStartReward(player) {
+            let reward = checkHasFullSet(player, "美國") ? 400 : 200;
+            player.coins += reward;
+            if (checkHasFullSet(player, "美國")) {
+                gameState.logs.push(`🇺🇸 【矽谷投資】發動！獲得雙倍起點獎勵 400 哩程幣！`);
+            } else {
+                gameState.logs.push(`🎉 經過起點！獲得 200 哩程幣補貼。`);
+            }
+        }
 
-            let p = gameState.players[myPlayerId];
+        window.handleRollOnline = async function() {
+            if (hasRolledThisTurn) return;
+            hasRolledThisTurn = true;
+            
+            document.getElementById("rollBtn").disabled = true;
+
+            let p = gameState.players[gameState.turn];
 
             if (p.isFrozen) {
                 gameState.logs.push(`❄️ ${p.name} 正處於凍結狀態，暫停 1 回合！`);
@@ -918,11 +1020,37 @@
             let d2 = Math.floor(Math.random() * 6) + 1;
             let step = d1 + d2;
 
-            document.getElementById("diceResult").innerText = `🎲 擲出: [${d1}] + [${d2}] = ${step} 點`;
+            if (gameState.strikeTurnCount > 0) {
+                step = d1;
+                document.getElementById("diceResult").innerText = `🎲 罷工影響！擲出: [${d1}] = ${step} 點`;
+                gameState.logs.push(`⚠️ 受罷工影響，${p.name} 本回合僅能使用 1 顆骰子 (1D6)！`);
+            } else {
+                document.getElementById("diceResult").innerText = `🎲 擲出: [${d1}] + [${d2}] = ${step} 點`;
+            }
+
             gameState.logs.push(`➡️ <strong>${p.name}</strong> 最終前進 ${step} 步！`);
 
+            let oldPos = p.pos;
             p.pos = (p.pos + step) % 40;
+
+            if (p.pos < oldPos) {
+                grantStartReward(p);
+            }
+
             handleGridActionOnline(p, boardData[p.pos]);
+        }
+
+        function getAllUnownedCards() {
+            const takenKeys = getTakenCardKeys();
+            let result = [];
+            Object.keys(countryCardDatabase).forEach(cName => {
+                countryCardDatabase[cName].cards.forEach(c => {
+                    if (!takenKeys.includes(`${cName}-${c.type}`)) {
+                        result.push({ country: cName, type: c.type, name: c.name });
+                    }
+                });
+            });
+            return result;
         }
 
         function handleGridActionOnline(player, grid) {
@@ -935,15 +1063,40 @@
 
             if (grid.type === "country") {
                 const cName = grid.country;
+                let otherOwners = gameState.players.filter(p => p.id !== player.id && (p.cards||[]).some(c => c.country === cName));
+                
+                if (otherOwners.length > 0) {
+                    let opponent = otherOwners[0];
+                    let opponentCardsInCountry = opponent.cards.filter(c => c.country === cName);
+                    
+                    if (checkHasFullSet(player, "俄羅斯")) {
+                        gameState.logs.push(`🇷🇺 【西伯利亞鐵路】發動：${player.name} 免付過路費！`);
+                    } else {
+                        let toll = opponentCardsInCountry.length === 3 ? (cName === "沙地阿拉伯" ? 200 : 100) : 30;
+                        player.coins -= toll;
+                        opponent.coins += toll;
+                        gameState.logs.push(`🏠 停留在 ${opponent.name} 的【${cName}】，支付過路費 ${toll} 哩程幣！`);
+                    }
+                }
+
                 const takenKeys = getTakenCardKeys();
                 let availableCards = countryCardDatabase[cName].cards.filter(c => !takenKeys.includes(`${cName}-${c.type}`));
 
                 if (availableCards.length > 0) {
                     let targetCard = availableCards[0];
                     let cost = checkHasFullSet(player, "德國") ? 70 : 100;
+                    let hasLangCard = (player.inventory||[]).includes("語言天賦爆發");
 
-                    desc.innerText = `【${cName}】未發行卡片：[${targetCard.type}：${targetCard.name}]\n售價：${cost} 哩程幣`;
+                    if (hasLangCard) { cost = 50; }
+
+                    desc.innerText = `【${cName}】未發行卡片：[${targetCard.type}：${targetCard.name}]\n售價：${cost} 哩程幣 ${hasLangCard ? '(已套用語言天賦折扣)' : ''}`;
                     btns.appendChild(createButton(`購買元素卡 (${cost}幣)`, "btn", async () => {
+                        if (hasLangCard) {
+                            player.inventory = player.inventory.filter(i => i !== "語言天賦爆發");
+                            let langCardObj = baseChanceCards.find(c => c.title === "語言天賦爆發");
+                            if (langCardObj) gameState.discardPile.push(langCardObj);
+                            gameState.logs.push(`🎴 ${player.name} 消耗了【語言天賦爆發】卡片，享 50 幣優惠價！`);
+                        }
                         await buyCardOnline(cName, targetCard.type, targetCard.name, cost);
                     }));
                     btns.appendChild(createButton("放棄", "btn btn-sec", endTurnOnline));
@@ -951,10 +1104,161 @@
                     desc.innerText = `【${cName}】的所有元素卡皆已售出。`;
                     btns.appendChild(createButton("確認", "btn", endTurnOnline));
                 }
+            } else if (grid.type === "event") {
+                let card1 = drawCardFromDeckOnline();
+                if (!card1) {
+                    desc.innerText = `🎴 牌堆已全數抽完。`;
+                    btns.appendChild(createButton("確認", "btn", endTurnOnline));
+                    return;
+                }
+
+                if (checkHasFullSet(player, "印度")) {
+                    let card2 = drawCardFromDeckOnline();
+                    if (!card2) {
+                        desc.innerText = `🇮🇳 【瑜伽冥想】僅剩一張牌：【${card1.title}】\n"${card1.desc}"`;
+                        btns.appendChild(createButton("執行效果", "btn", async () => { await executeChanceCardOnline(player, card1, null); }));
+                    } else {
+                        desc.innerText = `🇮🇳 【瑜伽冥想】抽出兩張牌，請選擇一張執行：\n1. [${card1.title}]\n2. [${card2.title}]`;
+                        btns.appendChild(createButton(`執行 [${card1.title}]`, "btn", async () => { await executeChanceCardOnline(player, card1, card2); }));
+                        btns.appendChild(createButton(`執行 [${card2.title}]`, "btn", async () => { await executeChanceCardOnline(player, card2, card1); }));
+                    }
+                } else {
+                    desc.innerText = `🎴 抽到命運卡：【${card1.title}】\n"${card1.desc}"`;
+                    if (chosenCardIsChoice(card1)) {
+                        renderChoiceCardUI(player, card1);
+                    } else {
+                        btns.appendChild(createButton("執行卡片效果", "btn", async () => { await executeChanceCardOnline(player, card1, null); }));
+                    }
+                }
+            } else if (grid.type === "airport") {
+                let hasJapanSkill = checkHasFullSet(player, "日本");
+
+                if (hasJapanSkill) {
+                    desc.innerText = `🚅 【新幹線】發動！您可免費自由選擇飛往地圖上的任一機場：`;
+                    const airportNames = ["羽田機場 (#5)", "開羅機場 (#15)", "希斯路機場 (#25)", "甘迺迪機場 (#35)"];
+                    
+                    airportPosList.forEach((targetPos, idx) => {
+                        if (targetPos !== player.pos) {
+                            btns.appendChild(createButton(`飛往 ${airportNames[idx]}`, "btn", async () => {
+                                let oldPos = player.pos;
+                                player.pos = targetPos;
+                                if (targetPos < oldPos) grantStartReward(player);
+                                gameState.logs.push(`🚅 ${player.name} 發動【新幹線】免費飛抵 ${airportNames[idx]}！`);
+                                await endTurnOnline();
+                            }));
+                        }
+                    });
+                    btns.appendChild(createButton("不飛航", "btn btn-sec", endTurnOnline));
+                } else {
+                    let nextAirport = airportPosList.find(pos => pos > player.pos);
+                    if (!nextAirport) nextAirport = airportPosList[0];
+                    let cost = 100;
+
+                    desc.innerText = `✈️ 抵達${grid.name}！可支付 ${cost} 哩程幣直接飛往下一個機場 (#${nextAirport} 格)。`;
+                    btns.appendChild(createButton(`飛往下一機場 (${cost}幣)`, "btn", async () => {
+                        if (player.coins >= cost) {
+                            player.coins -= cost;
+                            let oldPos = player.pos;
+                            player.pos = nextAirport;
+                            if (nextAirport < oldPos) grantStartReward(player);
+                            gameState.logs.push(`✈️ ${player.name} 支付 ${cost} 幣乘坐航班飛抵下一個機場 (#${nextAirport})！`);
+                        } else {
+                            alert("哩程幣不足！");
+                        }
+                        await endTurnOnline();
+                    }));
+                    btns.appendChild(createButton("不乘坐", "btn btn-sec", endTurnOnline));
+                }
+            } else if (grid.name === "免稅購物中心") {
+                let unownedCards = getAllUnownedCards();
+                if (unownedCards.length === 0) {
+                    desc.innerText = `🛍️ 免稅購物中心：市場上所有文化元素卡已售罄，無卡可抽。`;
+                    btns.appendChild(createButton("確認離開", "btn", endTurnOnline));
+                } else {
+                    desc.innerText = `🎁 歡迎來到免稅購物中心！可花費 80 哩程幣購買「文化盲盒」，隨機獲得 1 張市場未被持有的元素卡！`;
+                    btns.appendChild(createButton(`購買文化盲盒 (80幣)`, "btn", async () => {
+                        if (player.coins >= 80) {
+                            player.coins -= 80;
+                            let randomCard = unownedCards[Math.floor(Math.random() * unownedCards.length)];
+                            player.cards = player.cards || [];
+                            player.cards.push(randomCard);
+                            gameState.logs.push(`🎁 ${player.name} 購買了文化盲盒，隨機獲得 [${randomCard.country}] 的【${randomCard.type}：${randomCard.name}】！`);
+                        } else {
+                            alert("哩程幣不足 80 幣！");
+                        }
+                        await endTurnOnline();
+                    }));
+                    btns.appendChild(createButton("不購買", "btn btn-sec", endTurnOnline));
+                }
+            } else if (grid.name === "外匯交易所") {
+                desc.innerText = `💱 歡迎來到外匯交易所！可使用 200 哩程幣購買外匯債券 (+15 分數)。`;
+                btns.appendChild(createButton(`購買外匯債券 (200幣/15分)`, "btn", async () => {
+                    if (player.coins >= 200) {
+                        player.coins -= 200;
+                        player.bond = (player.bond || 0) + 15;
+                        gameState.logs.push(`💱 ${player.name} 購買了外匯債券，獲得 +15 積分！`);
+                    } else {
+                        alert("哩程幣不足 200！");
+                    }
+                    await endTurnOnline();
+                }));
+                btns.appendChild(createButton("不購買", "btn btn-sec", endTurnOnline));
+            } else if (grid.name === "安檢區域") {
+                if (checkHasFullSet(player, "俄羅斯")) {
+                    gameState.logs.push(`🇷🇺 【西伯利亞鐵路】發動：${player.name} 免受安檢強制扣留！`);
+                    desc.innerText = `到達安檢區域，發動西伯利亞鐵路免受扣留！`;
+                } else {
+                    player.pos = 10;
+                    player.isFrozen = true;
+                    gameState.logs.push(`🚨 ${player.name} 安檢不合格，直去海關扣留區 (#10) 並停一回合！（無起點獎勵）`);
+                    desc.innerText = `安檢不合格！強制送往【海關扣留區】並暫停移動 1 回合！`;
+                }
+                btns.appendChild(createButton("確認", "btn", endTurnOnline));
+            } else if (grid.name === "旅遊黑店") {
+                if (checkHasFullSet(player, "中國")) {
+                    gameState.logs.push(`🇨🇳 【萬里長城】發動：${player.name} 免疫黑店強迫消費！`);
+                    desc.innerText = `遇上旅遊黑店，但發動萬里長城免疫損失！`;
+                } else {
+                    player.coins -= 100;
+                    gameState.logs.push(`⚠️ ${player.name} 在旅遊黑店損失 100 哩程幣！`);
+                    desc.innerText = `遇上旅遊黑店，被強迫消費 100 哩程幣！`;
+                }
+                btns.appendChild(createButton("確認", "btn", endTurnOnline));
+            } else if (grid.name === "文化博覽會") {
+                player.coins += 150;
+                gameState.logs.push(`🏛️ ${player.name} 參觀文化博覽會獲得 150 哩程幣資助！`);
+                desc.innerText = `參觀文化博覽會，獲得 150 哩程幣文化資助金！`;
+                btns.appendChild(createButton("領取資助", "btn", endTurnOnline));
             } else {
-                desc.innerText = `安全區域。`;
+                desc.innerText = `到達 ${grid.name}，休息整備一輪。`;
                 btns.appendChild(createButton("結束回合", "btn", endTurnOnline));
             }
+        }
+
+        function chosenCardIsChoice(card) {
+            return card && card.id === 4;
+        }
+
+        function renderChoiceCardUI(player, card) {
+            const desc = document.getElementById("actionDesc");
+            const btns = document.getElementById("actionBtns");
+            btns.innerHTML = "";
+
+            desc.innerText = `🧭 【${card.title}】：請選擇您要前進還是後退 2 格：`;
+
+            btns.appendChild(createButton("⬅️ 後退 2 格", "btn btn-sec", async () => {
+                player.pos = (player.pos - 2 + 40) % 40;
+                gameState.logs.push(`🧭 ${player.name} 選擇後退 2 格！`);
+                if (!card.keepable) gameState.discardPile.push(card);
+                await endTurnOnline();
+            }));
+
+            btns.appendChild(createButton("➡️ 前進 2 格", "btn", async () => {
+                player.pos = (player.pos + 2) % 40;
+                gameState.logs.push(`🧭 ${player.name} 選擇前進 2 格！`);
+                if (!card.keepable) gameState.discardPile.push(card);
+                await endTurnOnline();
+            }));
         }
 
         function getTakenCardKeys() {
@@ -970,14 +1274,54 @@
 
         function drawCardFromDeckOnline() {
             if (!gameState.currentDeck || gameState.currentDeck.length === 0) {
-                gameState.currentDeck = shuffle(gameState.discardPile || baseChanceCards);
+                if (!gameState.discardPile || gameState.discardPile.length === 0) return null;
+                gameState.logs.push("🔄 抽牌堆已用盡，自動將棄牌堆重新洗牌！");
+                gameState.currentDeck = shuffle(gameState.discardPile);
                 gameState.discardPile = [];
             }
             return gameState.currentDeck.pop();
         }
 
+        async function executeChanceCardOnline(player, chosenCard, unchosenCard) {
+            disableAllControls();
+
+            if (unchosenCard && !unchosenCard.keepable) {
+                gameState.discardPile.push(unchosenCard);
+            }
+
+            if (chosenCard.id === 1) { player.pos = (player.pos + 3) % 40; }
+            else if (chosenCard.id === 2) { player.pos = 5; player.isFrozen = true; }
+            else if (chosenCard.id === 3) { player.coins += 150; }
+            else if (chosenCard.id === 5) { 
+                gameState.strikeTurnCount = gameState.players.length + 1; 
+                gameState.logs.push(`⚠️ 發生罷工！全場接下來每位玩家 1 輪僅能使用 1 顆骰子移動 (1D6)！`);
+            }
+            else if (chosenCard.id === 6) { player.coins += getUnlockedCountries(player).length * 100; }
+            else if (chosenCard.id === 7) { gameState.players.forEach(o => { if(o.id !== player.id){ o.coins -= 30; player.coins += 30; } }); }
+            else if (chosenCard.id === 8) { player.coins -= 80; }
+            else if (chosenCard.id === 9) { player.inventory = player.inventory || []; player.inventory.push("語言天賦爆發"); }
+            else if (chosenCard.id === 10) { player.coins += 200; }
+            else if (chosenCard.id === 11) { player.coins += 150; }
+            else if (chosenCard.id === 12) { player.coins -= 80; }
+            else if (chosenCard.id === 13) { 
+                let total = gameState.players.reduce((sum, item) => sum + item.coins, 0); 
+                let avg = Math.floor(total / gameState.players.length); 
+                gameState.players.forEach(item => item.coins = avg); 
+            }
+            else if (chosenCard.id === 14) { player.coins += 250; }
+            else if (chosenCard.id === 15) { player.pos = 19; }
+
+            if (!chosenCard.keepable) {
+                gameState.discardPile.push(chosenCard);
+            }
+
+            gameState.logs.push(`🎴 執行了【${chosenCard.title}】效果。`);
+            await endTurnOnline();
+        }
+
         async function buyCardOnline(country, type, name, cost) {
-            let p = gameState.players[myPlayerId];
+            disableAllControls();
+            let p = gameState.players[gameState.turn];
             if (p.coins >= cost) {
                 p.coins -= cost;
                 p.cards = p.cards || [];
@@ -987,22 +1331,139 @@
             await endTurnOnline();
         }
 
+        function checkGameOverConditions() {
+            if (!gameState || gameState.status === "ended") return;
+
+            const totalCardsInDb = 16 * 3;
+            const totalBoughtCards = getTakenCardKeys().length;
+            const targetCount = gameState.targetUnlockCount || 4;
+
+            let winnerCandidate = null;
+
+            gameState.players.forEach(p => {
+                let unlocked = getUnlockedCountries(p);
+                if (unlocked.length >= targetCount) {
+                    winnerCandidate = p;
+                }
+            });
+
+            const isAllCardsSold = (totalBoughtCards >= totalCardsInDb);
+
+            if (winnerCandidate || isAllCardsSold) {
+                triggerGameOver(winnerCandidate, isAllCardsSold);
+            }
+        }
+
+        // 🛠️ 終局結算與古文明加成修正（必須完整解鎖該國家才計算加成）
+        function triggerGameOver(targetWinner, isAllCardsSold) {
+            gameState.status = "ended";
+            const modal = document.getElementById("gameOverModal");
+            const reasonEl = document.getElementById("winnerReason");
+            const detailsEl = document.getElementById("winnerDetails");
+
+            let leaderboard = gameState.players.map(p => {
+                let unlockedCountries = getUnlockedCountries(p);
+                let unlockScore = unlockedCountries.length * 300;
+                
+                let singleCardsCount = (p.cards || []).length - (unlockedCountries.length * 3);
+                let cardScore = Math.max(0, singleCardsCount) * 50;
+
+                let bondScore = p.bond || 0;
+                let coinScore = Math.floor(p.coins / 100);
+
+                let ancientBonus = 0;
+                let hasGreece = checkHasFullSet(p, "希臘");
+                let hasMexico = checkHasFullSet(p, "墨西哥");
+                let multipliers = (hasGreece ? 1 : 0) + (hasMexico ? 1 : 0);
+
+                // 🛠️ 必須完整解鎖該古文明國（3張牌齊全）才加 100 分
+                if (multipliers > 0) {
+                    let unlockedAncientCount = unlockedCountries.filter(c => ancientCountries.includes(c)).length;
+                    ancientBonus = unlockedAncientCount * 100 * multipliers;
+                }
+
+                let totalScore = unlockScore + cardScore + bondScore + coinScore + ancientBonus;
+
+                return {
+                    name: p.name,
+                    color: p.color,
+                    totalScore: totalScore,
+                    unlockScore: unlockScore,
+                    unlockedCount: unlockedCountries.length,
+                    unlockedList: unlockedCountries,
+                    cardScore: cardScore,
+                    cardsCount: (p.cards || []).length,
+                    bondScore: bondScore,
+                    coinScore: coinScore,
+                    coins: p.coins,
+                    ancientBonus: ancientBonus
+                };
+            });
+
+            leaderboard.sort((a, b) => b.totalScore - a.totalScore);
+
+            reasonEl.innerText = isAllCardsSold ? "🎴 全場所有文化元素卡已售罄！觸發遊戲終局結算！" : `🏆 玩家【${targetWinner.name}】成功達成解鎖 ${gameState.targetUnlockCount} 個國家的勝利目標！`;
+
+            let html = "";
+            leaderboard.forEach((item, index) => {
+                html += `
+                    <div class="score-card">
+                        <div class="score-title">
+                            第 ${index + 1} 名: <span style="color:${item.color};">${item.name}</span> —— 總分: <span style="color:#2ecc71; font-size:16px;">${item.totalScore} 分</span>
+                        </div>
+                        • <strong>解鎖國家得分</strong>: +${item.unlockScore} 分 (解鎖 ${item.unlockedCount} 國 × 300分: ${item.unlockedList.join(", ")||"無"})<br>
+                        • <strong>散卡持得分</strong>: +${item.cardScore} 分<br>
+                        • <strong>外匯債券積分</strong>: +${item.bondScore} 分<br>
+                        • <strong>古文明完整解鎖加成</strong>: +${item.ancientBonus} 分<br>
+                        • <strong>哩程幣折算分數</strong>: +${item.coinScore} 分 (持有 ${item.coins} 幣 ÷ 100)<br>
+                    </div>
+                `;
+            });
+
+            detailsEl.innerHTML = html;
+            modal.style.display = "flex";
+        }
+
         function createButton(text, className, onClickFunc) {
             const btn = document.createElement("button");
             btn.className = className;
             btn.innerText = text;
 
-            if (gameState.turn !== myPlayerId) {
+            const activePlayer = gameState.players[gameState.turn];
+            const isMyTurn = isSinglePlayerMode ? !activePlayer.isAI : (gameState.turn === myPlayerId);
+
+            if (!isMyTurn) {
                 btn.disabled = true;
             } else {
-                btn.onclick = onClickFunc;
+                btn.onclick = async () => {
+                    disableAllControls();
+                    await onClickFunc();
+                };
             }
             return btn;
         }
 
+        // 🛠️ 完全重置防卡鎖的回合切換
         async function endTurnOnline() {
+            let p = gameState.players[gameState.turn];
+
+            if (checkHasFullSet(p, "瑞士")) {
+                p.coins += 100;
+                gameState.logs.push(`🇨🇭 【瑞士銀行】發動：${p.name} 獲得 +100 哩程幣！`);
+            }
+
+            if (gameState.strikeTurnCount > 0) {
+                gameState.strikeTurnCount--;
+                if (gameState.strikeTurnCount === 0) {
+                    gameState.logs.push(`🟢 罷工風波已過去，所有玩家恢復使用 2 顆骰子移動！`);
+                }
+            }
+
             gameState.turn = (gameState.turn + 1) % gameState.players.length;
             document.getElementById("actionBtns").innerHTML = "";
+
+            hasRolledThisTurn = false; // 強制重置擲骰鎖
+            isAIBusy = false;          // 強制重置 AI 狀態鎖
 
             if (!isSinglePlayerMode && currentRoomCode) {
                 await update(ref(db, `rooms/${currentRoomCode}`), gameState);
@@ -1011,20 +1472,20 @@
             }
         }
 
-        // 🛠️ 修正：交易對象與選單產生邏輯防錯處理
         function openTradeModal() {
             if (!gameState || !gameState.players) return;
             const select = document.getElementById("tradeTargetPlayerSelect");
             select.innerHTML = "";
 
-            const opponents = gameState.players.filter(p => p.id !== myPlayerId);
+            const currentPlayer = gameState.players[gameState.turn];
+            const opponents = gameState.players.filter(p => p.id !== currentPlayer.id);
             if (opponents.length === 0) {
                 alert("目前沒有其他對手可進行交易！");
                 return;
             }
 
             opponents.forEach(p => {
-                select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+                select.innerHTML += `<option value="${p.id}">${p.name} ${p.isAI ? '(AI)' : ''}</option>`;
             });
 
             updateTradeModalOptions();
@@ -1034,20 +1495,20 @@
         function updateTradeModalOptions() {
             if (!gameState || !gameState.players) return;
 
-            let myPlayer = gameState.players[myPlayerId];
+            let currentPlayer = gameState.players[gameState.turn];
             let targetId = parseInt(document.getElementById("tradeTargetPlayerSelect").value);
             let opponent = gameState.players.find(p => p.id === targetId);
 
-            if (!opponent) opponent = gameState.players.find(p => p.id !== myPlayerId);
+            if (!opponent) opponent = gameState.players.find(p => p.id !== currentPlayer.id);
             if (!opponent) return;
 
-            document.getElementById("initiatorName").innerText = `${myPlayer.name} (您) 支付`;
+            document.getElementById("initiatorName").innerText = `${currentPlayer.name} 支付`;
             document.getElementById("targetName").innerText = `${opponent.name} 支付`;
 
             const mySelect = document.getElementById("myTradeCardSelect");
             mySelect.innerHTML = `<option value="-1">不提供卡片</option>`;
-            if (myPlayer.cards && myPlayer.cards.length > 0) {
-                myPlayer.cards.forEach((c, idx) => {
+            if (currentPlayer.cards && currentPlayer.cards.length > 0) {
+                currentPlayer.cards.forEach((c, idx) => {
                     mySelect.innerHTML += `<option value="${idx}">[${c.country}] ${c.type}:${c.name}</option>`;
                 });
             }
@@ -1069,7 +1530,7 @@
             let myCoin = parseInt(document.getElementById("myTradeCoin").value) || 0;
             let targetCoin = parseInt(document.getElementById("targetTradeCoin").value) || 0;
 
-            let p = gameState.players[myPlayerId];
+            let p = gameState.players[gameState.turn];
             let opponent = gameState.players[targetId];
 
             if (!opponent) return;
@@ -1077,8 +1538,7 @@
             let myCard = (myCardIdx !== -1 && p.cards) ? p.cards[myCardIdx] : null;
             let targetCard = (targetCardIdx !== -1 && opponent.cards) ? opponent.cards[targetCardIdx] : null;
 
-            // 🤖 單機模式下直接自動模擬 AI 同意交易
-            if (isSinglePlayerMode && opponent.isAI) {
+            if (opponent.isAI) {
                 p.coins -= myCoin; opponent.coins += myCoin;
                 opponent.coins -= targetCoin; p.coins += targetCoin;
 
@@ -1091,7 +1551,7 @@
                     p.cards.push(targetCard);
                 }
 
-                gameState.logs.push(`🤝 交易成功！${opponent.name} 同意了您的交易提案。`);
+                gameState.logs.push(`🤝 交易成功！${opponent.name} (AI) 同意了 ${p.name} 的交易提案。`);
                 document.getElementById("tradeModal").style.display = "none";
                 updateBoardAndUI();
                 return;
@@ -1108,10 +1568,13 @@
                 targetCoin: targetCoin
             };
 
-            gameState.logs.push(`📩 ${p.name} 向 ${opponent.name} 發起了一項交易提案！`);
+            gameState.logs.push(`📩 ${p.name} 向 ${opponent.name} 發起了一項交易提案，等待回應！`);
             document.getElementById("tradeModal").style.display = "none";
 
-            if (!isSinglePlayerMode) {
+            if (isSinglePlayerMode) {
+                updateBoardAndUI();
+                checkTradeModalState();
+            } else {
                 await update(ref(db, `rooms/${currentRoomCode}`), gameState);
             }
         }
@@ -1123,17 +1586,18 @@
             }
 
             const offer = gameState.pendingTradeOffer;
+            const toP = gameState.players.find(p => p.id === offer.toId);
+            const fromP = gameState.players.find(p => p.id === offer.fromId);
 
-            if (offer.toId === myPlayerId) {
-                const fromP = gameState.players[offer.fromId];
-                document.getElementById("tradeReviewTitle").innerText = `${myPlayerName}，${fromP.name} 向您發起了交易請求！`;
+            if (isSinglePlayerMode || offer.toId === myPlayerId) {
+                document.getElementById("tradeReviewTitle").innerText = `請 ${toP.name} 審核：${fromP.name} 發起的交易請求！`;
                 
-                let giveText = `🎁 ${fromP.name} 願意給您：`;
+                let giveText = `🎁 ${fromP.name} 願意提供：`;
                 if (offer.myCard) giveText += `[${offer.myCard.country}] ${offer.myCard.type}:${offer.myCard.name} `;
                 if (offer.myCoin > 0) giveText += `+ ${offer.myCoin} 哩程幣`;
                 if (!offer.myCard && offer.myCoin === 0) giveText += `無`;
 
-                let takeText = `💸 要求您支付：`;
+                let takeText = `💸 要求 ${toP.name} 支付：`;
                 if (offer.targetCard) takeText += `[${offer.targetCard.country}] ${offer.targetCard.type}:${offer.targetCard.name} `;
                 if (offer.targetCoin > 0) takeText += `+ ${offer.targetCoin} 哩程幣`;
                 if (!offer.targetCard && offer.targetCoin === 0) takeText += `無`;
@@ -1148,8 +1612,8 @@
 
         async function acceptTradeOnline() {
             const offer = gameState.pendingTradeOffer;
-            let fromP = gameState.players[offer.fromId];
-            let toP = gameState.players[offer.toId];
+            let fromP = gameState.players.find(p => p.id === offer.fromId);
+            let toP = gameState.players.find(p => p.id === offer.toId);
 
             fromP.coins -= offer.myCoin; toP.coins += offer.myCoin;
             toP.coins -= offer.targetCoin; fromP.coins += offer.targetCoin;
@@ -1163,21 +1627,31 @@
                 fromP.cards.push(offer.targetCard);
             }
 
-            gameState.logs.push(`🤝 交易成功！${toP.name} 同意了 ${fromP.name} 的交易提案。`);
+            gameState.logs.push(`🤝 交易成功！${toP.name} 同意接受了 ${fromP.name} 的交易提案！`);
             gameState.pendingTradeOffer = null;
 
-            await update(ref(db, `rooms/${currentRoomCode}`), gameState);
+            if (isSinglePlayerMode) {
+                document.getElementById("tradeReviewModal").style.display = "none";
+                updateBoardAndUI();
+            } else {
+                await update(ref(db, `rooms/${currentRoomCode}`), gameState);
+            }
         }
 
         async function rejectTradeOnline() {
             const offer = gameState.pendingTradeOffer;
-            let toP = gameState.players[offer.toId];
-            let fromP = gameState.players[offer.fromId];
+            let toP = gameState.players.find(p => p.id === offer.toId);
+            let fromP = gameState.players.find(p => p.id === offer.fromId);
 
             gameState.logs.push(`❌ ${toP.name} 拒絕了 ${fromP.name} 的交易提案！`);
             gameState.pendingTradeOffer = null;
 
-            await update(ref(db, `rooms/${currentRoomCode}`), gameState);
+            if (isSinglePlayerMode) {
+                document.getElementById("tradeReviewModal").style.display = "none";
+                updateBoardAndUI();
+            } else {
+                await update(ref(db, `rooms/${currentRoomCode}`), gameState);
+            }
         }
 
         window.switchLobbyTab = function(mode) {
@@ -1195,13 +1669,14 @@
         }
 
         window.onload = function() {
+            renderHumanNameInputs();
+
             document.getElementById("startSingleGameBtn").onclick = startSinglePlayerGame;
             document.getElementById("createRoomBtn").onclick = createRoom;
             document.getElementById("joinRoomBtn").onclick = joinRoom;
             document.getElementById("startOnlineGameBtn").onclick = startOnlineGame;
             document.getElementById("rollBtn").onclick = window.handleRollOnline;
 
-            // 🤝 交易按鈕事件綁定
             document.getElementById("tradeBtn").onclick = openTradeModal;
             document.getElementById("tradeTargetPlayerSelect").onchange = updateTradeModalOptions;
             document.getElementById("submitTradeBtn").onclick = submitTradeOfferOnline;
