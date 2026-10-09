@@ -311,6 +311,26 @@
         </div>
     </div>
 
+    <!-- 📩 審核交易 Modal -->
+    <div class="modal" id="tradeReviewModal" style="display:none;">
+        <div class="modal-content">
+            <h3 style="color:#f1c40f; margin-bottom:10px;">📩 收到交易請求</h3>
+            <p id="tradeReviewTitle" style="font-size:13px; font-weight:bold; color:#2ecc71;"></p>
+            
+            <div class="trade-review-box">
+                <div id="tradeGiveDetail" style="color:#2ecc71;"></div>
+                <div id="tradeTakeDetail" style="color:#e74c3c; margin-top:6px;"></div>
+            </div>
+
+            <p style="font-size:12px; color:#ccc;">請問您是否同意接受此項交易？</p>
+
+            <div class="btn-group" style="margin-top:15px;">
+                <button class="btn" id="acceptTradeBtn" style="background:#2ecc71;">✅ 同意接受交易</button>
+                <button class="btn btn-sec" id="rejectTradeBtn" style="background:#e74c3c;">❌ 拒絕交易</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 🔥 引入 Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -331,7 +351,7 @@
         const db = getDatabase(app);
 
         let isSinglePlayerMode = false;
-        let isAIBusy = false; // 🔒 鎖定狀態：避免 AI 連續重複觸發
+        let isAIBusy = false;
         let currentRoomCode = null;
         let myPlayerId = 0;
         let myPlayerName = "玩家";
@@ -495,15 +515,13 @@
             updateBoardAndUI();
         }
 
-        // 🤖 電腦 AI 自動回合控制 (修復：嚴格判定與防止連續觸發)
         function checkAndTriggerAITurn() {
             if (!gameState || gameState.status !== "playing" || isAIBusy) return;
 
             const activePlayer = gameState.players[gameState.turn];
             
-            // 🔒 只有當前輪到的玩家是 AI，且不屬於玩家本人時才發動
             if (activePlayer && activePlayer.isAI && activePlayer.id !== myPlayerId) {
-                isAIBusy = true; // 鎖定 AI，防止重複調用
+                isAIBusy = true;
 
                 document.getElementById("rollBtn").disabled = true;
                 document.getElementById("tradeBtn").disabled = true;
@@ -559,7 +577,7 @@
                 }
             }
 
-            isAIBusy = false; // 解鎖 AI
+            isAIBusy = false;
             await endTurnOnline();
         }
 
@@ -704,6 +722,7 @@
                     document.getElementById("modeHeaderTag").innerText = "(線上對戰版)";
                     
                     updateBoardAndUI();
+                    checkTradeModalState();
                 }
             });
         }
@@ -848,6 +867,7 @@
             });
         }
 
+        // 🛠️ 修正：交易按鈕鎖定邏輯修復
         function updateTurnControlButtons() {
             const rollBtn = document.getElementById("rollBtn");
             const tradeBtn = document.getElementById("tradeBtn");
@@ -857,7 +877,7 @@
 
             if (gameState.turn === myPlayerId) {
                 rollBtn.disabled = false;
-                tradeBtn.disabled = false;
+                tradeBtn.disabled = false; // 解除交易按鈕鎖定
                 actionTitle.innerText = "🌟 輪到您的回合！";
                 if (!actionBtns.hasChildNodes()) {
                     actionDesc.innerText = "請點擊「擲骰子移動」或發起「自由交易」。";
@@ -991,6 +1011,175 @@
             }
         }
 
+        // 🛠️ 修正：交易對象與選單產生邏輯防錯處理
+        function openTradeModal() {
+            if (!gameState || !gameState.players) return;
+            const select = document.getElementById("tradeTargetPlayerSelect");
+            select.innerHTML = "";
+
+            const opponents = gameState.players.filter(p => p.id !== myPlayerId);
+            if (opponents.length === 0) {
+                alert("目前沒有其他對手可進行交易！");
+                return;
+            }
+
+            opponents.forEach(p => {
+                select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+            });
+
+            updateTradeModalOptions();
+            document.getElementById("tradeModal").style.display = "flex";
+        }
+
+        function updateTradeModalOptions() {
+            if (!gameState || !gameState.players) return;
+
+            let myPlayer = gameState.players[myPlayerId];
+            let targetId = parseInt(document.getElementById("tradeTargetPlayerSelect").value);
+            let opponent = gameState.players.find(p => p.id === targetId);
+
+            if (!opponent) opponent = gameState.players.find(p => p.id !== myPlayerId);
+            if (!opponent) return;
+
+            document.getElementById("initiatorName").innerText = `${myPlayer.name} (您) 支付`;
+            document.getElementById("targetName").innerText = `${opponent.name} 支付`;
+
+            const mySelect = document.getElementById("myTradeCardSelect");
+            mySelect.innerHTML = `<option value="-1">不提供卡片</option>`;
+            if (myPlayer.cards && myPlayer.cards.length > 0) {
+                myPlayer.cards.forEach((c, idx) => {
+                    mySelect.innerHTML += `<option value="${idx}">[${c.country}] ${c.type}:${c.name}</option>`;
+                });
+            }
+
+            const targetSelect = document.getElementById("targetTradeCardSelect");
+            targetSelect.innerHTML = `<option value="-1">不要求卡片</option>`;
+            if (opponent.cards && opponent.cards.length > 0) {
+                opponent.cards.forEach((c, idx) => {
+                    targetSelect.innerHTML += `<option value="${idx}">[${c.country}] ${c.type}:${c.name}</option>`;
+                });
+            }
+        }
+
+        async function submitTradeOfferOnline() {
+            let targetId = parseInt(document.getElementById("tradeTargetPlayerSelect").value);
+            let myCardIdx = parseInt(document.getElementById("myTradeCardSelect").value);
+            let targetCardIdx = parseInt(document.getElementById("targetTradeCardSelect").value);
+
+            let myCoin = parseInt(document.getElementById("myTradeCoin").value) || 0;
+            let targetCoin = parseInt(document.getElementById("targetTradeCoin").value) || 0;
+
+            let p = gameState.players[myPlayerId];
+            let opponent = gameState.players[targetId];
+
+            if (!opponent) return;
+
+            let myCard = (myCardIdx !== -1 && p.cards) ? p.cards[myCardIdx] : null;
+            let targetCard = (targetCardIdx !== -1 && opponent.cards) ? opponent.cards[targetCardIdx] : null;
+
+            // 🤖 單機模式下直接自動模擬 AI 同意交易
+            if (isSinglePlayerMode && opponent.isAI) {
+                p.coins -= myCoin; opponent.coins += myCoin;
+                opponent.coins -= targetCoin; p.coins += targetCoin;
+
+                if (myCard) {
+                    p.cards.splice(myCardIdx, 1);
+                    opponent.cards.push(myCard);
+                }
+                if (targetCard) {
+                    opponent.cards.splice(targetCardIdx, 1);
+                    p.cards.push(targetCard);
+                }
+
+                gameState.logs.push(`🤝 交易成功！${opponent.name} 同意了您的交易提案。`);
+                document.getElementById("tradeModal").style.display = "none";
+                updateBoardAndUI();
+                return;
+            }
+
+            gameState.pendingTradeOffer = {
+                fromId: p.id,
+                toId: opponent.id,
+                myCardIdx: myCardIdx,
+                targetCardIdx: targetCardIdx,
+                myCard: myCard,
+                targetCard: targetCard,
+                myCoin: myCoin,
+                targetCoin: targetCoin
+            };
+
+            gameState.logs.push(`📩 ${p.name} 向 ${opponent.name} 發起了一項交易提案！`);
+            document.getElementById("tradeModal").style.display = "none";
+
+            if (!isSinglePlayerMode) {
+                await update(ref(db, `rooms/${currentRoomCode}`), gameState);
+            }
+        }
+
+        function checkTradeModalState() {
+            if (!gameState || !gameState.pendingTradeOffer) {
+                document.getElementById("tradeReviewModal").style.display = "none";
+                return;
+            }
+
+            const offer = gameState.pendingTradeOffer;
+
+            if (offer.toId === myPlayerId) {
+                const fromP = gameState.players[offer.fromId];
+                document.getElementById("tradeReviewTitle").innerText = `${myPlayerName}，${fromP.name} 向您發起了交易請求！`;
+                
+                let giveText = `🎁 ${fromP.name} 願意給您：`;
+                if (offer.myCard) giveText += `[${offer.myCard.country}] ${offer.myCard.type}:${offer.myCard.name} `;
+                if (offer.myCoin > 0) giveText += `+ ${offer.myCoin} 哩程幣`;
+                if (!offer.myCard && offer.myCoin === 0) giveText += `無`;
+
+                let takeText = `💸 要求您支付：`;
+                if (offer.targetCard) takeText += `[${offer.targetCard.country}] ${offer.targetCard.type}:${offer.targetCard.name} `;
+                if (offer.targetCoin > 0) takeText += `+ ${offer.targetCoin} 哩程幣`;
+                if (!offer.targetCard && offer.targetCoin === 0) takeText += `無`;
+
+                document.getElementById("tradeGiveDetail").innerText = giveText;
+                document.getElementById("tradeTakeDetail").innerText = takeText;
+                document.getElementById("tradeReviewModal").style.display = "flex";
+            } else {
+                document.getElementById("tradeReviewModal").style.display = "none";
+            }
+        }
+
+        async function acceptTradeOnline() {
+            const offer = gameState.pendingTradeOffer;
+            let fromP = gameState.players[offer.fromId];
+            let toP = gameState.players[offer.toId];
+
+            fromP.coins -= offer.myCoin; toP.coins += offer.myCoin;
+            toP.coins -= offer.targetCoin; fromP.coins += offer.targetCoin;
+
+            if (offer.myCard) {
+                fromP.cards.splice(offer.myCardIdx, 1);
+                toP.cards.push(offer.myCard);
+            }
+            if (offer.targetCard) {
+                toP.cards.splice(offer.targetCardIdx, 1);
+                fromP.cards.push(offer.targetCard);
+            }
+
+            gameState.logs.push(`🤝 交易成功！${toP.name} 同意了 ${fromP.name} 的交易提案。`);
+            gameState.pendingTradeOffer = null;
+
+            await update(ref(db, `rooms/${currentRoomCode}`), gameState);
+        }
+
+        async function rejectTradeOnline() {
+            const offer = gameState.pendingTradeOffer;
+            let toP = gameState.players[offer.toId];
+            let fromP = gameState.players[offer.fromId];
+
+            gameState.logs.push(`❌ ${toP.name} 拒絕了 ${fromP.name} 的交易提案！`);
+            gameState.pendingTradeOffer = null;
+
+            await update(ref(db, `rooms/${currentRoomCode}`), gameState);
+        }
+
         window.switchLobbyTab = function(mode) {
             if (mode === 'single') {
                 document.getElementById("tabSingle").className = "tab-btn active";
@@ -1011,6 +1200,15 @@
             document.getElementById("joinRoomBtn").onclick = joinRoom;
             document.getElementById("startOnlineGameBtn").onclick = startOnlineGame;
             document.getElementById("rollBtn").onclick = window.handleRollOnline;
+
+            // 🤝 交易按鈕事件綁定
+            document.getElementById("tradeBtn").onclick = openTradeModal;
+            document.getElementById("tradeTargetPlayerSelect").onchange = updateTradeModalOptions;
+            document.getElementById("submitTradeBtn").onclick = submitTradeOfferOnline;
+            document.getElementById("cancelTradeBtn").onclick = () => document.getElementById("tradeModal").style.display = "none";
+
+            document.getElementById("acceptTradeBtn").onclick = acceptTradeOnline;
+            document.getElementById("rejectTradeBtn").onclick = rejectTradeOnline;
         };
     </script>
 </body>
